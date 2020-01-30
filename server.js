@@ -1,4 +1,3 @@
-const path = require("path");
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
@@ -6,6 +5,7 @@ const passport = require("passport");
 
 const users = require("./routes/api/users");
 const games = require("./routes/api/games");
+const highscores = require("./routes/api/high-scores")
 
 const app = express();
 
@@ -16,10 +16,6 @@ app.use(
   })
 );
 app.use(bodyParser.json());
-
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static("client/build"));
- }
 
 // DB Config
 const db = require("./config/keys").mongoURI;
@@ -39,13 +35,24 @@ app.use(passport.initialize());
 // Passport config
 require("./config/passport")(passport);
 
-// Routes
-app.use("/api/users", users);
-app.use("/api/v1/games", games);
+// ALLOW CORS
+const allowCrossDomain = function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  next();
+};
+app.use(allowCrossDomain);
 
-app.use("*", (req, res) =>
- res.sendFile(path.join(__dirname, "../client/build/index.html"))
-);
+// Routes
+app.get("/ping",(req, res) => res.sendStatus(200))
+
+// app.post("/api/v1/high-scores", (req, res) => {
+//   res.json({hello: "hello"})
+// })
+app.use("/api/v1/users", users);
+app.use("/api/v1/games", games);
+app.use("/api/v1/high-scores", highscores);
 
 const port = process.env.PORT || 5000;
 
